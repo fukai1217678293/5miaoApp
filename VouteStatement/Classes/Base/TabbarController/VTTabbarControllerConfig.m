@@ -13,6 +13,7 @@
 #import "FeedVC.h"
 #import "UserCenterVC.h"
 #import "PublishNewFeedVC.h"
+#import "QZFindVC.h"
 
 @interface VTTabbarControllerConfig ()
 
@@ -34,7 +35,7 @@
         _rootController = [[BaseTabBarController alloc] init];
         
         
-        BaseNavigationController * homePageItemNav = [[BaseNavigationController alloc] initWithRootViewController:[HomePageVC new]];
+        BaseNavigationController * homePageItemNav = [[BaseNavigationController alloc] initWithRootViewController:[QZFindVC new]];
         
         BaseNavigationController * feedItemNav = [[BaseNavigationController alloc] initWithRootViewController:[PublishNewFeedVC new]];
         

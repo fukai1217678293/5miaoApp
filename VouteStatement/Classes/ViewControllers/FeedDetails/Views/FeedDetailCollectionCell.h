@@ -1,8 +1,8 @@
 //
-//  FeedDetailTableViewCell.h
+//  FeedDetailCollectionCell.h
 //  VouteStatement
 //
-//  Created by 付凯 on 2017/1/26.
+//  Created by 付凯 on 2017/5/10.
 //  Copyright © 2017年 韫安. All rights reserved.
 //
 
@@ -15,39 +15,34 @@
 extern NSString * const FeedDetailTableViewTitleCellIdentifier;
 extern NSString * const FeedDetailTableViewFeedContentCellIdentifier;
 extern NSString * const FeedDetailTableViewPointVSCellIdentifier;
+extern NSString * const FeedDetailTableViewVotedCountHeaderCellIdentifier;
 extern NSString * const FeedDetailTableViewCommentHeaderCellIdentifier;
 extern NSString * const FeedDetailTableViewCommentCellIdentifier;
 
-@class FeedDetailTableViewCell;
-
+@class FeedDetailCollectionCell;
 @protocol FeedDetailTableViewCellDelegate <NSObject>
 
 @optional
-- (void)feedDetailTableViewCell:(FeedDetailTableViewCell *)cell
+- (void)feedDetailTableViewCell:(FeedDetailCollectionCell *)cell
                   voteCountView:(VoteCountVSView *)voteCountView
                didClickedToVote:(UIButton *)sender;
 
 
-- (void)feedDetailTableViewCell:(FeedDetailTableViewCell *)cell
+- (void)feedDetailTableViewCell:(FeedDetailCollectionCell *)cell
                     commentView:(CommentView *)commentView
         didClickedDianZanAction:(UIButton *)sender
                    commentModel:(CommentModel *)comment;
 
 @end
 
-
 @class FeedDetailTableViewCellDelegate;
-@class JoinCircleButton;
 
 typedef void(^FeedDetailCellTitleViewDidClickedButton)(UIButton *sender);
 
-@interface FeedDetailTableViewCell : UITableViewCell
+@interface FeedDetailCollectionCell : UICollectionViewCell
 
-+ (instancetype)loadCellWithTableView:(UITableView *)tableView reuseIdentifier:(NSString *)reuseIdentifier;
-
-@property (nonatomic,strong)FeedDetailModel *feedDetailModel;
+//@property (nonatomic,strong)FeedDetailModel *feedDetailModel;
 @property (nonatomic,strong)CommentModel * comment;
-//@property (nonatomic,assign)BOOL    showVoteFilterSwitch;
 @property (nonatomic,assign)BOOL    showMoreContent;
 @property (nonatomic,strong)id <FeedDetailTableViewCellDelegate> delegate;
 @property (nonatomic,strong)UIImageView *contentImageView;

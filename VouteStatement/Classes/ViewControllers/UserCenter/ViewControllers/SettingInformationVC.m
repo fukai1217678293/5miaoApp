@@ -174,13 +174,14 @@ static NSInteger kHeaderButtonTag = 2001;
         headerBtn.layer.cornerRadius = 30.0f;
         headerBtn.layer.masksToBounds = YES;
         headerBtn.backgroundColor = [UIColor whiteColor];
+        headerBtn.userInteractionEnabled = NO;
         headerBtn.tag = kHeaderButtonTag;
         [headerBtn sd_setImageWithURL:[NSURL URLWithString:_headerImageURLString] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"header_bg.png"] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
             if (!error) {
                 
             }
         }];
-        [headerBtn addTarget:self action:@selector(headerClicked:) forControlEvents:UIControlEventTouchUpInside];
+//        [headerBtn addTarget:self action:@selector(headerClicked:) forControlEvents:UIControlEventTouchUpInside];
         [cell addSubview:headerBtn];
     }
     else {
@@ -206,11 +207,19 @@ static NSInteger kHeaderButtonTag = 2001;
     return 50;
 }
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    
-    if (indexPath.row == 1) {
-        
+    if (indexPath.row == 0) {
+        [self.imagePickerManager actionSheetShowInView:self.view];
+        WEAKSELF;
+        self.imagePickerManager.didSelectedImagehandle = ^(UIImage *image) {
+            UITableViewCell * cell = [weakSelf.infoTableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
+            UIButton * headerButton = [cell viewWithTag:kHeaderButtonTag];
+            UIImage * fixImage = [image fixOrientation];
+            [headerButton setImage:fixImage forState:UIControlStateNormal];
+            weakSelf.selectedImage =fixImage;
+        };
+    }
+    else if (indexPath.row == 1) {
         SettingNicknameVC * nicknameVC = [[SettingNicknameVC alloc] init];
         [self.navigationController pushViewController:nicknameVC animated:YES];
     }

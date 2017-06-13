@@ -19,7 +19,11 @@
         [presentVC showMessage:@"请填写标题" inView:presentVC.view];
         return NO;
     }
-    if (model.title.length < 5) {
+    if (model.title.length < 1) {
+        [presentVC showMessage:@"您输入的标题过短" inView:presentVC.view];
+        return NO;
+    }
+    if ([model.title stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]].length<1) {
         [presentVC showMessage:@"您输入的标题过短" inView:presentVC.view];
         return NO;
     }
@@ -37,10 +41,13 @@
     if ([NSString isBlankString:model.title]) {
         return NO;
     }
-    if (model.title.length < 5) {
+    if (model.title.length < 1) {
         return NO;
     }
     if (model.title.length > 50) {
+        return NO;
+    }
+    if ([model.title stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]].length<1) {
         return NO;
     }
     return YES;

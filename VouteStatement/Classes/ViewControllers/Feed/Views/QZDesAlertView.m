@@ -100,13 +100,13 @@
 #pragma mark --getter
 - (UIView *)contentView {
     if (!_contentView) {
-        _contentView = [[UIView alloc] initWithFrame:CGRectMake((SCREEN_WIDTH-300)/2.0f, (SCREEN_HEIGHT-150)/2.0f, 300, 150)];
+        _contentView = [[UIView alloc] initWithFrame:CGRectMake((SCREEN_WIDTH-300)/2.0f, (SCREEN_HEIGHT-190)/2.0f, 300, 190)];
         _contentView.backgroundColor = [UIColor whiteColor];
         _contentView.layer.cornerRadius = 4.5f;
         _contentView.layer.masksToBounds = YES;
         
-        NSString *text = @"发送在圈子内的话题仅圈内人可看,不选择圈子则发送到\"发现\",任何人可见。\n创建新圈子直接输入圈子名";
-        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(15, 0, 270, 105)];
+        NSString *text = @"圈子是一个私密交流场所,在这没人知道你的真实身份。加入圈子是神秘的,需要圈内人邀请。圈子内的信息24小时自动删除,拒绝挖坟。\n\n快创建你的圈子吧。";
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(15, 0, 270, 145)];
         titleLabel.font = [UIFont systemFontOfSize:16];
         titleLabel.text = text;
         titleLabel.textAlignment = NSTextAlignmentLeft;

@@ -9,6 +9,9 @@
 #import "CommonSettingVC.h"
 #import "BaseTabBarController.h"
 #import "RegistProtocolVC.h"
+#import "VTWebViewController.h"
+#import "JPushHelper.h"
+
 @interface CommonSettingVC ()<UITableViewDelegate,UITableViewDataSource> {
     
     NSArray         * _titleArray;
@@ -38,14 +41,27 @@
 }
 #pragma mark - PrivateMethod 
 - (void)clearHDMemory {
-    
+    float tmpSize = [[SDImageCache sharedImageCache] getSize];
+    tmpSize = tmpSize/1000.0f;//Kb
+    NSString *clearCacheName = tmpSize >= 1000 ? [NSString stringWithFormat:@"清理缓存%.2fM",tmpSize/1000.0f] : [NSString stringWithFormat:@"清理缓存%.2fK",tmpSize];
+    [self showMessage:clearCacheName inView:self.view];
+
+    [[SDImageCache sharedImageCache] clearDisk];
+    [[SDImageCache sharedImageCache] clearMemory];
 }
 - (void)registProtocol {
-    [self.navigationController pushViewController:[RegistProtocolVC new] animated:YES];
+    VTWebViewController *webVC = [[VTWebViewController alloc] initWithNavTitle:@"用户协议" urlString:@"https://5miaoapp.com/eula"];
+    [self.navigationController pushViewController:webVC animated:YES];
+}
+- (void)aboutOurs {
+    VTWebViewController *webVC = [[VTWebViewController alloc] initWithNavTitle:@"关于我们" urlString:@"https://5miaoapp.com/about"];
+    [self.navigationController pushViewController:webVC animated:YES];
 }
 #pragma mark -- action method
 - (void)exitLogin {
     [[VTAppContext shareInstance] clearUserInfo];
+    [[JPushHelper shareInstance] setTags:@[]];
+    [[JPushHelper shareInstance] setAlias:@""];
     BaseTabBarController * rootVC = (BaseTabBarController *)[UIApplication sharedApplication].delegate.window.rootViewController;
     rootVC.selectedIndex = 0;
     [self.navigationController popToRootViewControllerAnimated:YES];
@@ -70,6 +86,9 @@
     }
     else if (indexPath.row == 1){
         [self registProtocol];
+    }
+    else if (indexPath.row == 2) {
+        [self aboutOurs];
     }
 }
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {

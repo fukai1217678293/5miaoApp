@@ -21,6 +21,7 @@
 @implementation VTUserTagHelper
 
 static VTUserTagHelper * _obj = nil;
+
 + (instancetype)sharedHelper {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -30,7 +31,6 @@ static VTUserTagHelper * _obj = nil;
     });
     return _obj;
 }
-
 - (void)startBindNewTags{
     [self.apimanager cancelAllRequest];
     [self.apimanager loadData];
@@ -46,7 +46,6 @@ static VTUserTagHelper * _obj = nil;
 - (void)managerCallAPIDidFailed:(APIBaseManager *)manager {
     
 }
-
 - (AllTagApiManager *)apimanager {
     if (!_apimanager) {
         _apimanager = [[AllTagApiManager alloc] init];
@@ -54,5 +53,4 @@ static VTUserTagHelper * _obj = nil;
     }
     return _apimanager;
 }
-
 @end

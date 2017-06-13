@@ -15,7 +15,7 @@
 
 #define     JPushAppKey         @"4dd64c70f7647f6986ff3190"
 #define     JPushChannel        @"App Store"
-#define     IsProduction        0
+#define     IsProduction        1
 
 
 

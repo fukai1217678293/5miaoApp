@@ -19,6 +19,7 @@
 #ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #import <UserNotifications/UserNotifications.h> 
 #endif
+#import "LaunchPageManager.h"
 
 #define IOS10 ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10.0)
 
@@ -28,7 +29,6 @@
     [self umLaunchOptions];
     [[IQKeyboardManager sharedManager] setEnable:YES];
     [[NotificationManager sharedManager] startMonitoring];
-    
     JPUSHRegisterEntity * entity = [[JPUSHRegisterEntity alloc] init];
     entity.types = JPAuthorizationOptionAlert|JPAuthorizationOptionBadge|JPAuthorizationOptionSound;
     if ([[UIDevice currentDevice].systemVersion floatValue] >= 8.0) {

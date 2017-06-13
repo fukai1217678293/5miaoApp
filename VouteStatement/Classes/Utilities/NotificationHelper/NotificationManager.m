@@ -33,40 +33,34 @@ static NotificationManager *obj = nil;
     dispatch_once(&onceToken, ^{
         if (!obj) {
             obj = [[NotificationManager alloc] init];
+            [[NSNotificationCenter defaultCenter] addObserver:obj selector:@selector(userDidLoginIn) name:VTAppContextUserDidLoginInNotification object:nil];
+            [[NSNotificationCenter defaultCenter] addObserver:obj selector:@selector(userDidLoginOut) name:VTAppContextUserDidLoginOutNotification object:nil];
         }
     });
     return obj;
 }
 - (void)startMonitoring {
-    [[VTAppContext shareInstance] addObserver:self forKeyPath:@"isOnline" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
     if ([VTAppContext shareInstance].isOnline) {
-//        [self.timer fire];
+        [self.timer fire];
     }
 }
 - (void)stopMonitoring {
     [self.timer invalidate];
     self.timer = nil;
-    [[VTAppContext shareInstance] removeObserver:self forKeyPath:@"isOnline"];
     [self.apiManager cancelAllRequest];
+    AppDelegate *appdelegate = (AppDelegate *)[UIApplication sharedApplication].delegate;
+    appdelegate.rootTabbarConfig.haveRedPointTip = NO;
+    [[NSNotificationCenter defaultCenter] postNotificationName:NotificationManagerDidReceiveNewData object:@{@"circle":@"0",@"feed":@"0"}];
+}
+- (void)userDidLoginIn {
+    [self startMonitoring];
+}
+- (void)userDidLoginOut {
+    [self stopMonitoring];
 }
 - (void)autoRequest {
     [self.apiManager cancelAllRequest];
     [self.apiManager loadData];
-}
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
-    if ([keyPath isEqualToString:@"isOnline"]) {
-        int newValue = [[change valueForKey:@"new"] intValue];
-        int oldValue = [[change valueForKey:@"old"] intValue];
-        if (newValue != oldValue) {
-            if (newValue) {//online
-                [self.timer fire];
-            } else {//offline
-                [self.timer invalidate];
-                self.timer = nil;
-                [self.apiManager cancelAllRequest];
-            }
-        }
-    }
 }
 #pragma mark -- VTAPIManagerParamSource
 - (NSDictionary *)paramsForApi:(APIBaseManager *)manager {

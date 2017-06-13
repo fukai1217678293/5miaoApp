@@ -9,6 +9,9 @@
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
 
+UIKIT_EXTERN NSNotificationName const VTAppContextUserDidLoginInNotification;
+UIKIT_EXTERN NSNotificationName const VTAppContextUserDidLoginOutNotification;
+
 @interface VTAppContext : NSObject
 
 /*! about network status !*/
@@ -59,7 +62,12 @@
 /*! user device information !*/
 @property (nonatomic,copy)NSString *uuid;
 
+/*! user first open app show tip !*/
 @property (nonatomic,assign)BOOL showFindDescAlert;
+
+/*! user first open app show guide page!*/
+@property (nonatomic,assign)BOOL showHelloPage;
+
 + (instancetype)shareInstance;
 
 - (void)clearUserInfo ;

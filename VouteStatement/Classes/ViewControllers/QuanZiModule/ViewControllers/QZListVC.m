@@ -181,6 +181,9 @@
         self.qzInformationModel = [manager fetchDataWithReformer:reformer];
         [self.dataCollectionView reloadItemsAtIndexPaths:@[[NSIndexPath indexPathForItem:0 inSection:0]]];
     }
+    else if (manager == self.exitQZApiManager || manager == self.joinQZApiManager) {
+        [[VTUserTagHelper sharedHelper] startBindNewTags];
+    }
 }
 - (void)managerCallAPIDidFailed:(APIBaseManager *)manager {
     if (manager == self.listApiManager) {

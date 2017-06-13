@@ -121,16 +121,17 @@ NSString * const PublishFeedTableViewCellTypePointOptionInput = @"PublishFeedTab
     }
     else if ([self.reuseIdentifier isEqualToString:PublishFeedTableViewCellTypePointOptionInput]) {
         LimitLengthTextField *leftOptionView = [_pointOptionInputView viewWithTag:1300];
-        LimitLengthTextField *rightOptionView = [_pointOptionInputView viewWithTag:1301];
         NSString *leftMinlimit = [(NSArray *)minlimits objectAtIndex:0];
         NSString *leftMaxlimit = [(NSArray *)maxlimits objectAtIndex:0];
         NSString *leftPlaceholder = [(NSArray *)placeholder objectAtIndex:0];
-        NSString *rightMinlimit = [(NSArray *)minlimits objectAtIndex:1];
-        NSString *rightMaxlimit = [(NSArray *)maxlimits objectAtIndex:1];
-        NSString *rightPlaceholder = [(NSArray *)placeholder objectAtIndex:1];
         leftOptionView.minLimit = [leftMinlimit intValue];
         leftOptionView.maxLimit = [leftMaxlimit intValue];
         leftOptionView.placeholder = leftPlaceholder;
+        
+        NSString *rightMinlimit = [(NSArray *)minlimits objectAtIndex:1];
+        NSString *rightMaxlimit = [(NSArray *)maxlimits objectAtIndex:1];
+        NSString *rightPlaceholder = [(NSArray *)placeholder objectAtIndex:1];
+        LimitLengthTextField *rightOptionView = [_pointOptionInputView viewWithTag:1301];
         rightOptionView.minLimit = [rightMinlimit intValue];
         rightOptionView.maxLimit = [rightMaxlimit intValue];
         rightOptionView.placeholder = rightPlaceholder;

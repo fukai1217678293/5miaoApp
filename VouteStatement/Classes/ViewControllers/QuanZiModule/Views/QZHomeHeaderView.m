@@ -51,6 +51,7 @@
         [self addSubview:self.joinButton];
     }
     if (isJoined) {
+        [_joinButton.layer removeAllAnimations];
         [_joinButton setTitle:@"已加入" forState:UIControlStateNormal];
         [_joinButton setTitleColor:[UIColor colorWithHexstring:@"999999"] forState:UIControlStateNormal];
         _joinButton.layer.borderColor = [UIColor colorWithHexstring:@"999999"].CGColor;
@@ -59,6 +60,35 @@
         [_joinButton setTitle:@"+ 加入" forState:UIControlStateNormal];
         [_joinButton setTitleColor:[UIColor colorWithHexstring:@"fe3768"] forState:UIControlStateNormal];
         _joinButton.layer.borderColor = [UIColor colorWithHexstring:@"fe3768"].CGColor;
+        CGFloat kAnimationDuration = 1;
+        CAGradientLayer *contentLayer = (CAGradientLayer *)_joinButton.layer;
+        CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform"];
+        scaleAnimation.fromValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1, 1, 1)];
+        scaleAnimation.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1.1, 1.1, 1)];
+        scaleAnimation.duration = kAnimationDuration;
+        scaleAnimation.cumulative = NO;
+        scaleAnimation.repeatCount = MAXFLOAT;
+        [scaleAnimation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault]];
+        [contentLayer addAnimation: scaleAnimation forKey:@"myScale"];
+        
+        CABasicAnimation *scaleAnimation1 = [CABasicAnimation animationWithKeyPath:@"transform"];
+        scaleAnimation1.fromValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1.2, 1.2, 1)];
+        scaleAnimation1.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1, 1, 1.2)];
+        scaleAnimation1.duration = kAnimationDuration;
+        scaleAnimation1.cumulative = NO;
+        scaleAnimation1.repeatCount = MAXFLOAT;
+        [scaleAnimation1 setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault]];
+        [contentLayer addAnimation: scaleAnimation forKey:@"myScale"];
+
+        
+        CAAnimationGroup *group = [CAAnimationGroup animation];
+        group.duration = kAnimationDuration;
+        group.removedOnCompletion = NO;
+        group.repeatCount = MAXFLOAT;
+        group.fillMode = kCAFillModeForwards;
+        [group setAnimations:@[scaleAnimation,scaleAnimation1]];
+        
+        [contentLayer addAnimation:group forKey:@"animationOpacity"];
     }
 }
 #pragma mark -- getter

@@ -177,8 +177,8 @@
                 _searchView.text = _feedModel.circle_name;
                 _searchView.hidden = NO;
             }
-            [_searchView reloadTableViewWithDataSource:resultArray];
         }
+        [_searchView reloadTableViewWithDataSource:resultArray];
     }
     else if ([manager isKindOfClass:[UploadImageApiManager class]]) {
         UploadImageReformer * reformer = [[UploadImageReformer alloc] init];
@@ -293,7 +293,7 @@
             _dataSource =[@[
                             //section 0
                             @[
-                                @[@"65",PublishFeedTableViewCellTypeCircleInput,@"发到哪个圈子？(选填,创建新圈子直接输入圈子名)",@"circle_name",@0,@MAXFLOAT],
+                                @[@"65",PublishFeedTableViewCellTypeCircleInput,@"发到哪个圈子？(创建新圈子直接输入圈子名)",@"circle_name",@0,@MAXFLOAT],
                                 @[@"80",PublishFeedTableViewCellTypeLasthourInput,@"",@"last_hours",@0,@MAXFLOAT]
                                 ],
                             //section 1
@@ -305,7 +305,7 @@
             _dataSource = [@[
                              //section 0
                              @[
-                                 @[@"65",PublishFeedTableViewCellTypeCircleInput,@"发到哪个圈子？(选填,创建新圈子直接输入圈子名)",@"circle_name",@0,@MAXFLOAT]
+                                 @[@"65",PublishFeedTableViewCellTypeCircleInput,@"发到哪个圈子？(创建新圈子直接输入圈子名)",@"circle_name",@0,@MAXFLOAT]
                                  ],
                              //section 1
                              @[
@@ -380,7 +380,7 @@
         _dataSource = [@[
            //section 0
            @[
-              @[@"65",PublishFeedTableViewCellTypeCircleInput,@"发到哪个圈子？(选填,创建新圈子直接输入圈子名)",@"circle_name",@0,@MAXFLOAT]],
+              @[@"65",PublishFeedTableViewCellTypeCircleInput,@"发到哪个圈子？(创建新圈子直接输入圈子名)",@"circle_name",@0,@MAXFLOAT]],
            //section 1
            @[
                @[@"45",PublishFeedTableViewCellTypePointOptionInput,@[@"第一项(默认赞同)",@"第二项(默认反对)"],@[@"left_option",@"right_option"],@[@1,@1],@[@10,@10]]

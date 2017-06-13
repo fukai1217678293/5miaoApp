@@ -22,7 +22,7 @@
         
         UILabel * contentLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, self.width-20, self.height-45)];
         contentLabel.backgroundColor = [UIColor clearColor];
-        contentLabel.text = @"这里的话题不属于任何圈子,发在这里的话题可以得到全国各地小伙伴的互动(发布话题时不选择圈子就可以哦)!";
+        contentLabel.text = @"这里的话题不属于任何圈子,谁都可以看到。发布话题时不选择圈子即发送到发现。";
         contentLabel.textAlignment = NSTextAlignmentCenter;
         contentLabel.textColor = [UIColor whiteColor];
         contentLabel.font = [UIFont systemFontOfSize:16];

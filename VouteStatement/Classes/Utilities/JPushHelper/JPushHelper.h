@@ -8,20 +8,13 @@
 
 #import <Foundation/Foundation.h>
 
-
-typedef void(^PushServinceSetAliasSuccessCall)(void);
-typedef void(^PushServinceSetAliasErrorCall)(NSString *error);
-
 @interface JPushHelper : NSObject
 
 @property (nonatomic,strong) NSString *alias;
 
-@property (nonatomic,strong) NSSet *tags;
+@property (nonatomic,strong) NSArray *tags;
 
 + (instancetype)shareInstance;
 
-- (void)clearAlias:(NSString *)alias
-     successHandle:(PushServinceSetAliasSuccessCall)successCallback
-       errorHandle:(PushServinceSetAliasErrorCall)errorCallback;
 
 @end

@@ -229,7 +229,8 @@ static NSInteger const countdownImageViewBaseTag = 1030;
             
             UILabel *pointScoreLabel = [[UILabel alloc] initWithFrame:CGRectMake(i == 0 ? 10: vsLabel.right+15,vsLabel.top-10, vsLabel.left-40, 35)];
             pointScoreLabel.backgroundColor = [UIColor clearColor];
-            pointScoreLabel.textAlignment = i == 0 ? NSTextAlignmentRight : NSTextAlignmentLeft;
+//            pointScoreLabel.textAlignment = i == 0 ? NSTextAlignmentRight : NSTextAlignmentLeft;
+            pointScoreLabel.textAlignment = NSTextAlignmentCenter;
             pointScoreLabel.font = [UIFont systemFontOfSize:12];
             pointScoreLabel.textColor = UIRGBColor(121, 120, 121, 1);
             NSString * text = [NSString stringWithFormat:@"%d 票",i == 0 ? posvote : negvote];
@@ -269,7 +270,7 @@ static NSInteger const countdownImageViewBaseTag = 1030;
             
             NSString *optionText = i ? self.dataModel.right_option : self.dataModel.left_option;
             //option 标题
-            UILabel * optionLabel =[[UILabel alloc] initWithFrame:CGRectMake(0 ,0,120, 20)];
+            UILabel * optionLabel =[[UILabel alloc] initWithFrame:CGRectMake(pointScoreLabel.left ,pointScoreLabel.bottom,pointScoreLabel.width, 20)];
             optionLabel.backgroundColor = [UIColor clearColor];
             optionLabel.textAlignment = NSTextAlignmentCenter;
             optionLabel.textColor = [UIColor colorWithHexstring:@"333333"];
@@ -277,7 +278,7 @@ static NSInteger const countdownImageViewBaseTag = 1030;
             optionLabel.font = [UIFont systemFontOfSize:18];
             optionLabel.tag = titleScoreLabelBaseTag + i;
             optionLabel.adjustsFontSizeToFitWidth = YES;
-            optionLabel.center = CGPointMake(layer.centerX, layer.centerY+25);
+//            optionLabel.center = CGPointMake(layer.centerX, layer.centerY+25);
             [_contentView addSubview:optionLabel];
             
             if (i == 0) {

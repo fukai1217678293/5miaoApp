@@ -16,7 +16,6 @@
 #import "ExitCircleApiManager.h"
 #import "FeedDetailModel.h"
 #import "RegistViewController.h"
-#import "FeedDetailTableViewCell.h"
 #import "VottingView.h"
 #import "QZListVC.h"
 #import "CommentFeedViewController.h"
@@ -24,9 +23,11 @@
 #import <UMMobClick/MobClick.h>
 #import "ReportView.h"
 #import "VTUserTagHelper.h"
-@interface FeedDetailViewController ()<VTAPIManagerCallBackDelegate,VTAPIManagerParamSource,UITableViewDelegate,UITableViewDataSource,FeedDetailTableViewCellDelegate,VottingViewDelegate>
+#import "FeedDetailCollectionCell.h"
+@interface FeedDetailViewController ()<VTAPIManagerCallBackDelegate,VTAPIManagerParamSource,FeedDetailTableViewCellDelegate,VottingViewDelegate,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout,UICollectionViewDataSource,UIScrollViewDelegate>
 
-@property (nonatomic,strong)UITableView     *detailTableView;
+//@property (nonatomic,strong)UITableView     *detailTableView;
+@property (nonatomic,strong)UICollectionView        *detailCollectionView;
 @property (nonatomic,strong)FeedDetailApiManager    *feedDetailApiManager;
 @property (nonatomic,strong)CommentListApiManager   *commentListApiManager;
 @property (nonatomic,strong)JoinQZApiManager        *joinCircleApiManager;
@@ -52,7 +53,8 @@
     [self.navigationController.navigationBar setTitleTextAttributes:
      @{NSFontAttributeName:[UIFont systemFontOfSize:16]}];
     self.navigationItem.rightBarButtonItems = @[self.reportedItem,self.shareItem];
-    [self.view addSubview:self.detailTableView];
+//    [self.view addSubview:self.detailTableView];
+    [self.view addSubview:self.detailCollectionView];
     [self.feedDetailApiManager loadData];
     self.view.backgroundColor =UIRGBColor(242, 242, 242, 1.0f);
 }
@@ -100,12 +102,12 @@
     }
 }
 - (void)headerRefresh {
-    if ([self.detailTableView.mj_footer isRefreshing]) {
+    if ([self.detailCollectionView.mj_footer isRefreshing]) {
         [self.commentListApiManager cancelAllRequest];
-        [self.detailTableView.mj_footer endRefreshing];
+        [self.detailCollectionView.mj_footer endRefreshing];
     }
-    if (self.detailTableView.mj_footer.state == MJRefreshStateNoMoreData) {
-        [self.detailTableView.mj_footer setState:MJRefreshStateIdle];
+    if (self.detailCollectionView.mj_footer.state == MJRefreshStateNoMoreData) {
+        [self.detailCollectionView.mj_footer setState:MJRefreshStateIdle];
     }
     if (!_joinCircleApiManager) {
         [_joinCircleApiManager cancelAllRequest];
@@ -119,8 +121,8 @@
     
 }
 - (void)footerRefresh {
-    if ([self.detailTableView.mj_header isRefreshing]) {//header刷新时不允许 footer刷新
-        [self.detailTableView.mj_footer endRefreshing];
+    if ([self.detailCollectionView.mj_header isRefreshing]) {//header刷新时不允许 footer刷新
+        [self.detailCollectionView.mj_footer endRefreshing];
         return;
     }
     if (self.commentsList.count) {
@@ -128,7 +130,7 @@
     } else {
         self.page = 1;
     }
-    [self.detailTableView.mj_footer beginRefreshing];
+    [self.detailCollectionView.mj_footer beginRefreshing];
     [self.commentListApiManager loadData];
 
 }
@@ -138,7 +140,7 @@
     CommentFeedViewController *commentVC = [[CommentFeedViewController alloc] init];
     commentVC.feed_hash = self.feed_hash_name;
     commentVC.publishCommentHandle = ^(){
-        [weakSelf.detailTableView.mj_header beginRefreshing];
+        [weakSelf.detailCollectionView.mj_header beginRefreshing];
     };
     [self.navigationController pushViewController:commentVC animated:YES];
 }
@@ -188,10 +190,7 @@
         }
     }];
 }
-- (void)configCell:(FeedDetailTableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section != 1) {
-        return;
-    }
+- (void)configCell:(FeedDetailCollectionCell *)cell atIndexPath:(NSIndexPath *)indexPath {
     NSString *imgURL = self.feedDetailModel.pic;
     if ([NSString isBlankString:imgURL]) {
         return;
@@ -203,18 +202,19 @@
     } else {
         [cell.contentImageView setImage:cachedImage];
         self.feedDetailModel.imageHeigth = (CGFloat)(SCREEN_WIDTH - 20)*cachedImage.size.height/(CGFloat)cachedImage.size.width;
-        [_detailTableView reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:0 inSection:1]] withRowAnimation:UITableViewRowAnimationNone];
+        [_detailCollectionView reloadItemsAtIndexPaths:@[indexPath]];
     }
 }
 - (void)downloadImage:(NSString *)imageURL forIndexPath:(NSIndexPath *)indexPath {
     // 利用 SDWebImage 框架提供的功能下载图片
+    WEAKSELF;
     [[SDWebImageDownloader sharedDownloader] downloadImageWithURL:[NSURL URLWithString:imageURL] options:SDWebImageDownloaderUseNSURLCache progress:^(NSInteger receivedSize, NSInteger expectedSize) {
         // do nothing
     } completed:^(UIImage *image, NSData *data, NSError *error, BOOL finished) {
         if (!error) {
             [[SDImageCache sharedImageCache] storeImage:image forKey:imageURL toDisk:YES];
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self.detailTableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+                [weakSelf.detailCollectionView reloadItemsAtIndexPaths:@[indexPath]];
             });
         }
     }];
@@ -230,10 +230,63 @@
         [bottomButton setTitle:@"立即投票解锁更多精彩内容" forState:UIControlStateNormal];
     }
 }
+- (NSString *)getCellIdentiferWithIndexPath:(NSIndexPath *)indexPath {
+    if (!self.feedDetailModel) {
+        return nil;
+    }
+    if (self.feedDetailModel) {
+        if (indexPath.section == 0) {
+            if (indexPath.row == 0) {
+                return FeedDetailTableViewTitleCellIdentifier;
+            } else if (indexPath.row == 1) {
+                if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewVotedCountHeaderCellIdentifier;
+                }
+                if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewFeedContentCellIdentifier;
+                }
+                if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewPointVSCellIdentifier;
+                }
+                if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewFeedContentCellIdentifier;
+                }
+            } else if (indexPath.row == 2) {
+                if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewPointVSCellIdentifier;
+                }
+                if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewVotedCountHeaderCellIdentifier;
+                }
+                if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                    return nil;
+                }
+                if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewPointVSCellIdentifier;
+                }
+            } else if (indexPath.row == 3) {
+                if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                    return FeedDetailTableViewPointVSCellIdentifier;
+                }
+                return nil;
+            }
+        }
+        else if (indexPath.section == 1) {
+            if (indexPath.row == 0) {
+                return FeedDetailTableViewCommentHeaderCellIdentifier;
+            } else {
+                return FeedDetailTableViewCommentCellIdentifier;
+            }
+        }
+    }
+    return nil;
+}
 #pragma mark -- VTAPIManagerParamSource
 - (NSDictionary *)paramsForApi:(APIBaseManager *)manager {
     if (manager == self.feedDetailApiManager) {
-        self.feedDetailHUD = [self showHUDLoadingWithMessage:@"" inView:self.view];
+        if (!self.feedDetailHUD) {
+            self.feedDetailHUD = [self showHUDLoadingWithMessage:@"" inView:self.view];
+        }
     }
     else if ([manager isKindOfClass:[UpForCommentApiManager class]]) {
         //        return @{@"side":self.feedDetailModel.side};
@@ -248,10 +301,15 @@
 #pragma mark -- VTAPIManagerCallBackDelegate
 - (void)managerCallAPIDidSuccess:(APIBaseManager *)manager {
     if (manager == self.feedDetailApiManager) {
-        [self hiddenHUD:self.feedDetailHUD];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self hiddenHUD:self.feedDetailHUD];
+            self.feedDetailHUD = nil;
+        });
         self.feedDetailModel = [manager fetchDataWithReformer:[FeedDetailReformer new]];
         [self updateSubViews];
-        [self.detailTableView reloadData];
+        [UIView performWithoutAnimation:^{
+            [self.detailCollectionView reloadData];
+        }];
         if (self.loadedShowShareAction) {
             self.loadedShowShareAction = NO;
             [self shareAction:nil];
@@ -259,139 +317,169 @@
     }
     else if ([manager isKindOfClass:[CommentListApiManager class]]) {
         NSArray *resultArray = [manager fetchDataWithReformer:[FeedDetailReformer new]];
-        if ([self.detailTableView.mj_header isRefreshing]) {
+        if ([self.detailCollectionView.mj_header isRefreshing]) {
             self.commentsList = [resultArray mutableCopy];
         }
         else {
             if (!resultArray.count || !resultArray) {
-                [self.detailTableView.mj_footer endRefreshingWithNoMoreData];
+                [self.detailCollectionView.mj_footer endRefreshingWithNoMoreData];
                 return;
             }
             else {
                 [self.commentsList addObjectsFromArray:resultArray];
             }
         }
-        if ([self.detailTableView.mj_header isRefreshing]) {
-            [self.detailTableView.mj_header endRefreshing];
+        if ([self.detailCollectionView.mj_header isRefreshing]) {
+            [self.detailCollectionView.mj_header endRefreshing];
         }
-        if ([self.detailTableView.mj_footer isRefreshing]) {
-            [self.detailTableView.mj_footer endRefreshing];
+        if ([self.detailCollectionView.mj_footer isRefreshing]) {
+            [self.detailCollectionView.mj_footer endRefreshing];
         }
-        [_detailTableView reloadData];
+        if (self.commentsList.count) {
+            [UIView performWithoutAnimation:^{
+                [_detailCollectionView reloadSections:[NSIndexSet indexSetWithIndex:1]];
+            }];
+        }
+    }
+    else if (manager == self.exitCircleApiManager || manager == self.joinCircleApiManager) {
+        [[VTUserTagHelper sharedHelper] startBindNewTags];
     }
 }
 - (void)managerCallAPIDidFailed:(APIBaseManager *)manager {
     [self hiddenHUD:self.feedDetailHUD];
+    self.feedDetailHUD = nil;
     if (manager == self.feedDetailApiManager) {
         [self showMessage:manager.errorMessage inView:self.view];
     }
     else if (manager == self.commentListApiManager){
-        if ([self.detailTableView.mj_header isRefreshing]) {
-            [self.detailTableView.mj_header endRefreshing];
+        if ([self.detailCollectionView.mj_header isRefreshing]) {
+            [self.detailCollectionView.mj_header endRefreshing];
         }
-        if ([self.detailTableView.mj_footer isRefreshing]) {
-            [self.detailTableView.mj_footer endRefreshing];
+        if ([self.detailCollectionView.mj_footer isRefreshing]) {
+            [self.detailCollectionView.mj_footer endRefreshing];
         }
     }
 }
-#pragma mark -- UITableViewDataSource
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    if (self.feedDetailModel) {
-        if (!self.feedDetailModel.voted) {//是否已投票 未投票用户不允许查看更多评论
-            if (self.feedDetailModel.haveContent) {//有内容
+-(UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section {
+    if (section == 0) {
+        return UIEdgeInsetsZero;
+    }
+    return UIEdgeInsetsMake(10, 0, 0, 0);//分别为上、左、下、右
+}
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumLineSpacingForSectionAtIndex:(NSInteger)section {
+    if (section == 1) {
+        return 0;
+    }
+    return 10;
+}
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+    if (!self.feedDetailModel) {
+        return 0;
+    }
+    if (self.feedDetailModel.voted) {
+        return 2;
+    }
+    return 1;
+}
+
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    if (!self.feedDetailModel) {
+        return 0;
+    }
+    if (section == 0) {
+        if (self.feedDetailModel.voted) {
+            if (self.feedDetailModel.haveContent) {
                 return 3;
-            } else {//无内容
+            } else {
                 return 2;
             }
-        }
-        if (self.feedDetailModel.haveContent) {
-            return 4;
         } else {
-            return 3;
-        }
-    }
-    return 0;
-}
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    if (self.feedDetailModel) {
-        if (self.feedDetailModel.voted) {
             if (self.feedDetailModel.haveContent) {
-                if (section == 3) {
-                    return self.commentsList.count +1;
-                }
+                return 4;
             } else {
-                if (section == 2) {
-                    return self.commentsList.count +1;
-                }
+                return 3;
             }
         }
-        return 1;
     }
-    return 0;
+    return self.commentsList.count + 1;
 }
-- (UITableViewCell *)tableView:(UITableView *)tableView
-         cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSString *cellId;
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+    if (!self.feedDetailModel) {
+        return CGSizeMake(SCREEN_WIDTH, 0);
+    }
     if (indexPath.section == 0) {
-        cellId = FeedDetailTableViewTitleCellIdentifier;
-    }else if (indexPath.section == 1) {
-        if (self.feedDetailModel.haveContent) {
-            cellId =FeedDetailTableViewFeedContentCellIdentifier;
-        } else {
-            cellId =FeedDetailTableViewPointVSCellIdentifier;
-        }
-    }else if (indexPath.section == 2) {
-        if (self.feedDetailModel.voted) {
-            if (self.feedDetailModel.haveContent) {//有内容
-                cellId =FeedDetailTableViewPointVSCellIdentifier;
-            } else {
-                if (indexPath.row == 0) {
-                    cellId = FeedDetailTableViewCommentHeaderCellIdentifier;
-                    
+        if (indexPath.row == 0) {
+            if ([NSString isBlankString:self.feedDetailModel.circle_name]) {
+                return CGSizeMake(SCREEN_WIDTH, 80);
+            }
+            return CGSizeMake(SCREEN_WIDTH, 135);
+        } else if (indexPath.row == 1) {
+            if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                return CGSizeMake(SCREEN_WIDTH, 40);
+            }
+            if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                if ([NSString isBlankString:self.feedDetailModel.pic]) {
+                    return CGSizeMake(SCREEN_WIDTH,self.feedDetailModel.contentHeight+20);
                 } else {
-                    cellId = FeedDetailTableViewCommentCellIdentifier;
+                    return CGSizeMake(SCREEN_WIDTH,self.feedDetailModel.imageHeigth + self.feedDetailModel.contentHeight+30);
                 }
             }
-        } else {
-            if (self.feedDetailModel.haveContent) {
-                cellId =FeedDetailTableViewPointVSCellIdentifier;
-            } else {//无内容 未投票 只有两个section
-                return nil;
+            if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                return CGSizeMake(SCREEN_WIDTH, 70);
             }
-        }
-    }else if (indexPath.section == 3){
-        if (self.feedDetailModel.voted) {
-            if (self.feedDetailModel.haveContent) {//有内容
-                if (indexPath.row == 0) {
-                    cellId = FeedDetailTableViewCommentHeaderCellIdentifier;
-                    
+            if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                if ([NSString isBlankString:self.feedDetailModel.pic]) {
+                    return CGSizeMake(SCREEN_WIDTH,self.feedDetailModel.contentHeight+20);
                 } else {
-                    cellId = FeedDetailTableViewCommentCellIdentifier;
+                    return CGSizeMake(SCREEN_WIDTH,self.feedDetailModel.imageHeigth + self.feedDetailModel.contentHeight+30);
                 }
-            } else {
-                return nil;
             }
-        } else {
-            return nil;
+        } else if (indexPath.row == 2) {
+            if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                return CGSizeMake(SCREEN_WIDTH, 70);
+            }
+            if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                return CGSizeMake(SCREEN_WIDTH, 40);
+            }
+            if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
+                return CGSizeMake(SCREEN_WIDTH, 0);
+            }
+            if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                return CGSizeMake(SCREEN_WIDTH, 70);
+            }
+        } else if (indexPath.row == 3) {
+            if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
+                return CGSizeMake(SCREEN_WIDTH, 70);
+            }
+            return CGSizeMake(SCREEN_WIDTH, 0);
         }
     }
-    FeedDetailTableViewCell *cell = [FeedDetailTableViewCell loadCellWithTableView:tableView reuseIdentifier:cellId];
-    cell.selectionStyle = UITableViewCellSelectionStyleNone;
-    cell.delegate = self;
-    if (self.feedDetailModel.voted) {
-        if (self.feedDetailModel.haveContent) {
-            if (indexPath.section == 3 && indexPath.row != 0) {
-                cell.comment = self.commentsList[indexPath.row-1];
-            }
+    else if (indexPath.section == 1) {
+        if (indexPath.row == 0) {
+            return CGSizeMake(SCREEN_WIDTH, 40);
         } else {
-            if (indexPath.section == 2 && indexPath.row != 0) {
-                cell.comment = self.commentsList[indexPath.row-1];
-            }
+            return CGSizeMake(SCREEN_WIDTH, self.commentsList[indexPath.row-1].contentHeight +60);
         }
+        return CGSizeMake(SCREEN_WIDTH, 0);
+    }
+    return CGSizeMake(SCREEN_WIDTH, 0);
+}
+
+- (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    NSString *cellId = [self getCellIdentiferWithIndexPath:indexPath];
+    FeedDetailCollectionCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:cellId forIndexPath:indexPath];
+    cell.delegate = self;    
+    if ([cellId isEqualToString:FeedDetailTableViewFeedContentCellIdentifier]) {
+        [self configCell:cell atIndexPath:indexPath];
     }
     WEAKSELF;
-    [self configCell:cell atIndexPath:indexPath];
     [cell congfigContentView:self.feedDetailModel];
+    if (indexPath.section == 1 && indexPath.row != 0) {
+        if (self.commentsList.count) {
+            cell.comment = self.commentsList[indexPath.row-1];
+        }
+    }
     [cell setJoinCircleHandle:^(UIButton *sender){
         if (sender.selected) {
             [weakSelf.exitCircleApiManager loadData];
@@ -400,162 +488,22 @@
             [weakSelf.joinCircleApiManager loadData];
             weakSelf.feedDetailModel.joined = YES;
         }
-        [[VTUserTagHelper sharedHelper] startBindNewTags];
         sender.selected = !sender.selected;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[VTUserTagHelper sharedHelper] startBindNewTags];
+        });
     }];
     [cell setPushToCircleHomePage:^(UIButton *sender){
         QZListVC *circleHomeListVC = [[QZListVC alloc] init];
         circleHomeListVC.hash_name = weakSelf.feedDetailModel.circle_hash;
         [weakSelf.navigationController pushViewController:circleHomeListVC animated:YES];
     }];
+    
     return cell;
 }
-#pragma mark -- UITableViewDelegate
-- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
-    if (!self.feedDetailModel) {
-        return 0;
-    }
-    if (section == 0) {
-        if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 40;
-        }
-        return 10;
-    }
-    else if (section == 1) {
-        if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            return 40;
-        }
-        if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 10;
-        }
-        if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            return 10;
-        }
-        return 0;
-    }
-    else if (section == 2) {
-        if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            return 10;
-        }
-        return 0;
-    }
-    return 0;
-}
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (!self.feedDetailModel) {
-        return 0;
-    }
-    if (indexPath.section == 0) {
-        if ([NSString isBlankString:self.feedDetailModel.circle_name]) {
-            return 80;
-        }
-        return 135;
-    }
-    else if (indexPath.section == 1) {
-        if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 70;
-        }
-        if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            if ([NSString isBlankString:self.feedDetailModel.pic]) {
-                return self.feedDetailModel.contentHeight+20;
-            } else {
-                return self.feedDetailModel.imageHeigth + self.feedDetailModel.contentHeight+30;
-            }
-//            return self.feedDetailModel.imageHeigth + self.feedDetailModel.contentHeight+30;
-        }
-        if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 70;
-        }
-        if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            if ([NSString isBlankString:self.feedDetailModel.pic]) {
-                return self.feedDetailModel.contentHeight+20;
-            } else {
-                return self.feedDetailModel.imageHeigth + self.feedDetailModel.contentHeight+30;
-            }
-        }
-        return 0.0f;
-    }
-    else if (indexPath.section == 2) {
-        if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            return 70;
-        }
-        if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            if (indexPath.row == 0) return 40;
-            return self.commentsList[indexPath.row-1].contentHeight +60;
-        }
-        if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            return 70;
-        }
-        return 0;
-    }
-    else if (indexPath.section == 3) {
-        if (!self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (!self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-            return 0;
-        }
-        if (self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-            if (indexPath.row == 0) return 40;
-            return self.commentsList[indexPath.row-1].contentHeight +60;
-        }
-    }
-    return 0;
-}
-- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
-    BOOL ret = NO;
-    if (section == 0 && !self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-        ret = YES;
-    }
-    if (section ==1 && !self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-        ret = YES;
-    }
-    else if (section == 2 && self.feedDetailModel.voted && !self.feedDetailModel.haveContent) {
-        ret = YES;
-    }
-    else if (section == 3 && self.feedDetailModel.voted && self.feedDetailModel.haveContent) {
-        ret = YES;
-    }
-    if (ret) {
-        UIView *bgView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 40)];
-        bgView.backgroundColor = [UIColor colorWithHexstring:@"f5f5f5"];
-        UIView *singleline = [[UIView alloc] initWithFrame:CGRectMake(10, 39.2/2.0f, SCREEN_WIDTH-20, 0.8)];
-        singleline.backgroundColor = [UIColor colorWithHexstring:@"e1e1e1"];
-        [bgView addSubview:singleline];
-        NSString *countString = [NSString stringWithFormat:@"已有%d票",[self.feedDetailModel.all_vote intValue]];
-        CGFloat rightCountWidth = [countString boundingRectWithSize:CGSizeMake(MAXFLOAT,20) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:13]} context:nil].size.width;
-        
-        UILabel *countLabel = [[UILabel alloc] initWithFrame:CGRectMake((SCREEN_WIDTH-rightCountWidth-10)/2.0f, 0, rightCountWidth+10, 40)];
-        countLabel.text = countString;
-        countLabel.backgroundColor = [UIColor colorWithHexstring:@"f5f5f5"];
-        countLabel.textAlignment = NSTextAlignmentCenter;
-        countLabel.font = [UIFont systemFontOfSize:13];
-        countLabel.textColor = [UIColor colorWithHexstring:@"333333"];
-        [bgView addSubview:countLabel];
-        return bgView;
-    }
-    return nil;
-}
+
 #pragma mark -- FeedDetailTableViewCellDelegate
-- (void)feedDetailTableViewCell:(FeedDetailTableViewCell *)cell commentView:(CommentView *)commentView didClickedDianZanAction:(UIButton *)sender commentModel:(CommentModel *)comment {
+- (void)feedDetailTableViewCell:(FeedDetailCollectionCell *)cell commentView:(CommentView *)commentView didClickedDianZanAction:(UIButton *)sender commentModel:(CommentModel *)comment {
     if (![VTAppContext shareInstance].isOnline) {//未登录
         RegistViewController *registVC = [[RegistViewController alloc] init];
         UINavigationController * loginNav = [[UINavigationController alloc] initWithRootViewController:registVC];
@@ -582,7 +530,7 @@
 }
 #pragma mark -- VottingViewDelegate
 - (void)vottingView:(VottingView *)voteView didVotedInSide:(int)side posvotes:(int)posVote negvotes:(int)negvote {
-    [self.detailTableView.mj_header beginRefreshing];
+    [self.detailCollectionView.mj_header beginRefreshing];
 }
 - (void)vottingView:(VottingView *)voteView didClickedShareItem:(NSUInteger)sharePlatformOption {
     UMSocialPlatformType platformType;
@@ -652,21 +600,7 @@
     }
     return _reportedItem;
 }
-- (UITableView *)detailTableView {
-    if (!_detailTableView) {
-        _detailTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT-65) style:UITableViewStylePlain];
-        _detailTableView.backgroundColor = UIRGBColor(242, 242, 242, 1.0f);
-        _detailTableView.delegate   = self;
-        _detailTableView.dataSource = self;
-        _detailTableView.tableFooterView = [UIView new];
-        _detailTableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(headerRefresh)];
-        MJRefreshAutoNormalFooter * footer = [MJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(footerRefresh)];
-        [footer setTitle:@"没有更多了" forState:MJRefreshStateNoMoreData ];
-        _detailTableView.mj_footer = footer;
-        [_detailTableView.mj_header beginRefreshing];
-    }
-    return _detailTableView;
-}
+
 - (NSMutableArray *)commentsList {
     if (!_commentsList) {
         _commentsList = [NSMutableArray arrayWithCapacity:0];
@@ -690,6 +624,33 @@
     }
     return _footerView;
 }
-
+- (UICollectionView *)detailCollectionView {
+    
+    if (!_detailCollectionView) {
+        UICollectionViewFlowLayout * layout = [[UICollectionViewFlowLayout alloc] init];
+        layout.minimumLineSpacing = 10.0f;
+        //        CGFloat defaultHeight =SCREEN_WIDTH*9/16.0f;
+        
+//        layout.estimatedItemSize = CGSizeMake(SCREEN_WIDTH, 70);
+//        layout.headerReferenceSize = CGSizeMake(SCREEN_WIDTH, 7.0f);
+        layout.minimumInteritemSpacing = 10.0f;
+        _detailCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT-65) collectionViewLayout:layout];
+        [_detailCollectionView registerClass:[FeedDetailCollectionCell class] forCellWithReuseIdentifier:FeedDetailTableViewTitleCellIdentifier];
+        [_detailCollectionView registerClass:[FeedDetailCollectionCell class] forCellWithReuseIdentifier:FeedDetailTableViewFeedContentCellIdentifier];
+        [_detailCollectionView registerClass:[FeedDetailCollectionCell class] forCellWithReuseIdentifier:FeedDetailTableViewPointVSCellIdentifier];
+        [_detailCollectionView registerClass:[FeedDetailCollectionCell class] forCellWithReuseIdentifier:FeedDetailTableViewCommentHeaderCellIdentifier];
+        [_detailCollectionView registerClass:[FeedDetailCollectionCell class] forCellWithReuseIdentifier:FeedDetailTableViewCommentCellIdentifier];
+        [_detailCollectionView registerClass:[FeedDetailCollectionCell class] forCellWithReuseIdentifier:FeedDetailTableViewVotedCountHeaderCellIdentifier];
+        _detailCollectionView.delegate = self;
+        _detailCollectionView.dataSource= self;
+        _detailCollectionView.backgroundColor = UIRGBColor(242, 242, 242, 1.0f);
+        _detailCollectionView.mj_header = [MJRefreshNormalHeader headerWithRefreshingTarget:self refreshingAction:@selector(headerRefresh)];
+        MJRefreshAutoNormalFooter * footer = [MJRefreshAutoNormalFooter footerWithRefreshingTarget:self refreshingAction:@selector(footerRefresh)];
+        [footer setTitle:@"没有更多了" forState:MJRefreshStateNoMoreData ];
+        _detailCollectionView.mj_footer = footer;
+        [_detailCollectionView.mj_header beginRefreshing];
+    }
+    return _detailCollectionView;
+}
 
 @end

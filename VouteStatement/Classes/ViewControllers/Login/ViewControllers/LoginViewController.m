@@ -82,8 +82,9 @@
 #pragma mark -- VTAPIManagerParamSource
 - (NSDictionary *)paramsForApi:(APIBaseManager *)manager {
     NSString * encryptPwd = [JSRSA encryptString:self.pwdVTTextFeildView.textField.text publicKey:RSA_PUBLIC_KEY];
-    return @{@"phone"   :self.userNameVTTextFeildView.textField.text,
+    NSDictionary *dict = @{@"phone"   :self.userNameVTTextFeildView.textField.text,
              @"password":encryptPwd};
+    return dict;
 }
 #pragma mark -- VTAPIManagerCallBackDelegate
 

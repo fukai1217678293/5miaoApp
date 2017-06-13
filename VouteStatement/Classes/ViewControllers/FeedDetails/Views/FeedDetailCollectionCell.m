@@ -1,26 +1,23 @@
 //
-//  FeedDetailTableViewCell.m
+//  FeedDetailCollectionCell.m
 //  VouteStatement
 //
-//  Created by 付凯 on 2017/1/26.
+//  Created by 付凯 on 2017/5/10.
 //  Copyright © 2017年 韫安. All rights reserved.
 //
 
-#import "FeedDetailTableViewCell.h"
-#import "VoteContentView.h"
+#import "FeedDetailCollectionCell.h"
 #import "VouteHeaderView.h"
-#import <Masonry.h>
+
 NSString * const FeedDetailTableViewTitleCellIdentifier = @"FeedDetailTableViewTitleCellIdentifier";
 NSString * const  FeedDetailTableViewFeedContentCellIdentifier = @"FeedDetailTableViewFeedContentCellIdentifier";
 NSString * const FeedDetailTableViewPointVSCellIdentifier = @"FeedDetailTableViewPointVSCellIdentifier";
+NSString * const FeedDetailTableViewVotedCountHeaderCellIdentifier = @"FeedDetailTableViewVotedCountHeaderCellIdentifier";
 NSString * const FeedDetailTableViewCommentHeaderCellIdentifier = @"FeedDetailTableViewCommentHeaderCellIdentifier";
 NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableViewCommentCellIdentifier";
 
-
-@interface FeedDetailTableViewCell ()<VoteCountVSViewDelegate,CommentViewDelegate>
-
+@interface FeedDetailCollectionCell ()<CommentViewDelegate>
 //FeedDetailTableViewTitleCellIdentifier
-
 @property (nonatomic,strong)UIView      *titleView;
 
 //FeedDetailTableViewVoteCountCellIdentifier
@@ -38,71 +35,33 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
 //FeedDetailTableViewMoreCommentCellIdentifier
 @property (nonatomic,strong)UIView      * commentHeaderView;
 
+//FeedDetailTableViewVotedCountHeaderCellIdentifier
+@property (nonatomic,strong)UIView      *votedCountView;
 @end
 
-@implementation FeedDetailTableViewCell
-
-+ (instancetype)loadCellWithTableView:(UITableView *)tableView reuseIdentifier:(NSString *)reuseIdentifier{
-    FeedDetailTableViewCell * cell = [tableView dequeueReusableCellWithIdentifier:reuseIdentifier];
-    if (!cell) {
-        cell = [[FeedDetailTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:reuseIdentifier];
+@implementation FeedDetailCollectionCell
+- (instancetype)initWithFrame:(CGRect)frame {
+    if (self = [super initWithFrame:frame]) {
+        self.contentView.backgroundColor = [UIColor whiteColor];
     }
-    return cell;
-}
-
-- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
-    
-    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
-        if ([reuseIdentifier isEqualToString:FeedDetailTableViewTitleCellIdentifier]) {
-            [self.contentView addSubview:self.titleView];
-        }
-        else if ([reuseIdentifier isEqualToString:FeedDetailTableViewFeedContentCellIdentifier]) {
-            [self.contentView addSubview:self.contentImageView];
-            [self.contentView addSubview:self.contentLabel];
-        }
-        else if ([reuseIdentifier isEqualToString:FeedDetailTableViewPointVSCellIdentifier]) {
-            [self.contentView addSubview:self.vouteHeaderView];
-            WEAKSELF;
-            [_vouteHeaderView mas_makeConstraints:^(MASConstraintMaker *make) {
-                make.left.equalTo(weakSelf.contentView.mas_left);
-                make.right.equalTo(weakSelf.contentView.mas_right);
-                make.top.equalTo(weakSelf.contentView.mas_top);
-                make.bottom.equalTo(weakSelf.contentView.mas_bottom);
-            }];
-        }
-        else if ([reuseIdentifier isEqualToString:FeedDetailTableViewCommentHeaderCellIdentifier]) {
-            [self.contentView addSubview:self.commentHeaderView];
-        }
-        else if ([reuseIdentifier isEqualToString:FeedDetailTableViewCommentCellIdentifier]) {
-            [self.contentView addSubview:self.commentView];
-        }
-    }
-//    self.textLabel.backgroundColor = [UIColor clearColor];
-//    self.imageView.backgroundColor = [UIColor clearColor];
-    self.contentView.backgroundColor = [UIColor whiteColor];
-//    self.backgroundColor = [UIColor clearColor];
     return self;
 }
-//- (void)awakeFromNib {
-//    [super awakeFromNib];
-//    self.textLabel.backgroundColor = [UIColor clearColor];
-//    self.imageView.backgroundColor = [UIColor clearColor];
-//    self.contentView.backgroundColor = [UIColor clearColor];
-//    self.backgroundColor = [UIColor clearColor];
-//}
+
 - (void)congfigContentView:(FeedDetailModel *)detailModel {
     
     if ([self.reuseIdentifier isEqualToString:FeedDetailTableViewTitleCellIdentifier]) {
+        if (!_titleView) {
+            [self.contentView addSubview:self.titleView];
+        }
         UILabel *titleLab = [_titleView viewWithTag:1000];
         UIButton *timeButton =[_titleView viewWithTag:1001];
         UIButton *quanziButton = [_titleView viewWithTag:1002];
         JoinCircleButton *joinCircleButton = [_titleView viewWithTag:1003];
-        
         titleLab.text = detailModel.title;
         timeButton.hidden = [NSString isBlankString:detailModel.live_time];
         [timeButton setTitle:detailModel.live_time forState:UIControlStateNormal];
         [timeButton setTitleEdgeInsets:UIEdgeInsetsMake(0, 5, 0, -5)];
-
+        
         quanziButton.hidden = [NSString isBlankString:detailModel.circle_name];
         [quanziButton setTitle:detailModel.circle_name forState:UIControlStateNormal];
         
@@ -110,13 +69,16 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
         joinCircleButton.selected = detailModel.joined;
     }
     else if ([self.reuseIdentifier isEqualToString:FeedDetailTableViewFeedContentCellIdentifier]) {
-       
+        if (!_contentLabel) {
+            [self.contentView addSubview:self.contentImageView];
+            [self.contentView addSubview:self.contentLabel];
+        }
         if ([NSString isBlankString:detailModel.pic]) {
             _contentImageView.frame = CGRectZero;
             _contentImageView.hidden = YES;
             _contentLabel.frame = CGRectMake(10, 0, SCREEN_WIDTH-20, detailModel.contentHeight+20);
             _contentLabel.text = detailModel.desc;
-
+            
         } else {
             _contentImageView.hidden = NO;
             CGRect frame = self.contentImageView.frame;
@@ -125,21 +87,36 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
             _contentLabel.text = detailModel.desc;
             _contentLabel.frame = CGRectMake(_contentImageView.left, _contentImageView.bottom+10, _contentImageView.width, detailModel.contentHeight);
         }
-        for (UIView *view in self.contentView.subviews) {
-            NSLog(@"%@ frame is %@",view.class,NSStringFromCGRect(view.frame));
-        }
     }
     else if ([self.reuseIdentifier isEqualToString:FeedDetailTableViewPointVSCellIdentifier]) {
+        if (!_vouteHeaderView) {
+            [self.contentView addSubview:self.vouteHeaderView];
+        }
         [_vouteHeaderView configSubViewsWithDataModel:detailModel];
     }
+    else if ([self.reuseIdentifier isEqualToString:FeedDetailTableViewVotedCountHeaderCellIdentifier]) {
+        if (!_votedCountView) {
+            [self.contentView addSubview:self.votedCountView];
+        }
+        UILabel *countLabel = [_votedCountView viewWithTag:2001];
+        NSString *countString = [NSString stringWithFormat:@"已有%d票",[detailModel.all_vote intValue]];
+        CGFloat rightCountWidth = [countString boundingRectWithSize:CGSizeMake(MAXFLOAT,20) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName: [UIFont systemFontOfSize:13]} context:nil].size.width;
+        countLabel.text = countString;
+//        countLabel.frame = CGRectMake((SCREEN_WIDTH-rightCountWidth-10)/2.0f, 0, rightCountWidth+10, 40);
+    }
     else if ([self.reuseIdentifier isEqualToString:FeedDetailTableViewCommentHeaderCellIdentifier]) {
+        if (!_commentHeaderView) {
+            [self.contentView addSubview:self.commentHeaderView];
+        }
         UILabel *countLabel = [_commentHeaderView viewWithTag:2000];
         countLabel.text = [NSString stringWithFormat:@"(%d)",[detailModel.commentCount intValue]];
     }
     else if ([self.reuseIdentifier isEqualToString:FeedDetailTableViewCommentCellIdentifier]) {
-        [self.contentView addSubview:self.commentView];
+        if (!_commentView) {
+            [self.contentView addSubview:self.commentView];
+        }
     }
-
+    
 }
 #pragma mark -- Event Response
 - (void)quanZiActionClicked :(UIButton *)sender {
@@ -208,7 +185,7 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
         quanZiButton.titleLabel.lineBreakMode = NSLineBreakByTruncatingTail;
         quanZiButton.tag = 1002;
         [quanZiButton addTarget:self action:@selector(quanZiActionClicked:) forControlEvents:UIControlEventTouchUpInside];
-
+        
         [_titleView addSubview:quanZiButton];
         //加入/未加入按钮
         JoinCircleButton *joinButton =[JoinCircleButton buttonWithType:UIButtonTypeCustom];
@@ -221,7 +198,7 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
         joinButton.layer.masksToBounds = YES;
         joinButton.layer.cornerRadius = 4.0f;
         [joinButton addTarget:self action:@selector(joinAndExitCircleAction:) forControlEvents:UIControlEventTouchUpInside];
-
+        
         [_titleView addSubview:joinButton];
         
     }
@@ -261,6 +238,10 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
     if (!_commentView) {
         _commentView = [[CommentView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0)];
         _commentView.delegate = self;
+        CALayer *bottomLayer =[[CALayer alloc] init];
+        bottomLayer.frame = CGRectMake(15, _commentView.bottom-0.5, SCREEN_WIDTH-15, 0.5);
+        bottomLayer.backgroundColor = [UIColor colorWithHexstring:@"e1e1e1"].CGColor;
+        [_commentView.layer addSublayer:bottomLayer];
     }
     return _commentView;
 }
@@ -288,16 +269,44 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
         countLabel.font = [UIFont systemFontOfSize:13.5f];
         countLabel.tag = 2000;
         [_commentHeaderView addSubview:countLabel];
+        
+        CALayer *bottomLayer =[[CALayer alloc] init];
+        bottomLayer.frame = CGRectMake(0, countLabel.bottom-0.5, SCREEN_WIDTH, 0.5);
+        bottomLayer.backgroundColor = [UIColor colorWithHexstring:@"e1e1e1"].CGColor;
+        [_commentHeaderView.layer addSublayer:bottomLayer];
     }
     return _commentHeaderView;
 }
+- (UIView *)votedCountView {
+    if (!_votedCountView) {
+         _votedCountView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 40)];
+        _votedCountView.backgroundColor = UIRGBColor(242, 242, 242, 1.0f);
+        UIView *singleline = [[UIView alloc] initWithFrame:CGRectMake(10, 39.2/2.0f, SCREEN_WIDTH-20, 0.8)];
+        singleline.backgroundColor = [UIColor colorWithHexstring:@"e1e1e1"];
+        [_votedCountView addSubview:singleline];
+
+        UILabel *countLabel = [[UILabel alloc] initWithFrame:CGRectMake((SCREEN_WIDTH-100)/2.0f, 0, 100, 40)];
+        countLabel.backgroundColor = UIRGBColor(242, 242, 242, 1.0f);
+        countLabel.textAlignment = NSTextAlignmentCenter;
+        countLabel.font = [UIFont systemFontOfSize:13];
+        countLabel.tag = 2001;
+        countLabel.textColor = [UIColor colorWithHexstring:@"333333"];
+        countLabel.layer.borderWidth = 0.0f;
+        countLabel.layer.borderColor =  UIRGBColor(242, 242, 242, 1.0f).CGColor;
+        countLabel.adjustsFontSizeToFitWidth = YES;
+        [_votedCountView addSubview:countLabel];
+    }
+    return _votedCountView;
+}
 @end
+
 
 @implementation JoinCircleButton
 
 - (void)setSelected:(BOOL)selected {
     [super setSelected:selected];
     if (selected) {
+        [self.layer removeAllAnimations];
         [self setTitle:@"已加入" forState:UIControlStateNormal];
         [self setTitleColor:[UIColor colorWithHexstring:@"999999"] forState:UIControlStateNormal];
         self.layer.borderColor = [UIColor colorWithHexstring:@"999999"].CGColor;
@@ -306,6 +315,37 @@ NSString * const FeedDetailTableViewCommentCellIdentifier = @"FeedDetailTableVie
         [self setTitle:@"+ 加入" forState:UIControlStateNormal];
         [self setTitleColor:[UIColor colorWithHexstring:@"fe3768"] forState:UIControlStateNormal];
         self.layer.borderColor = [UIColor colorWithHexstring:@"fe3768"].CGColor;
+
+        CGFloat kAnimationDuration = 1.0f;
+        CAGradientLayer *contentLayer = (CAGradientLayer *)self.layer;
+        CABasicAnimation *scaleAnimation = [CABasicAnimation animationWithKeyPath:@"transform"];
+        scaleAnimation.fromValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1, 1, 1)];
+        scaleAnimation.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1.1, 1.1, 1)];
+        scaleAnimation.duration = kAnimationDuration;
+        scaleAnimation.cumulative = NO;
+        scaleAnimation.repeatCount = MAXFLOAT;
+        [scaleAnimation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault]];
+        [contentLayer addAnimation: scaleAnimation forKey:@"myScale"];
+        
+        CABasicAnimation *scaleAnimation1 = [CABasicAnimation animationWithKeyPath:@"transform"];
+        scaleAnimation1.fromValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1.2, 1.2, 1)];
+        scaleAnimation1.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeScale(1, 1, 1.2)];
+        scaleAnimation1.duration = kAnimationDuration;
+        scaleAnimation1.cumulative = NO;
+        scaleAnimation1.repeatCount = MAXFLOAT;
+        [scaleAnimation1 setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionDefault]];
+        [contentLayer addAnimation: scaleAnimation forKey:@"myScale"];
+        
+        
+        CAAnimationGroup *group = [CAAnimationGroup animation];
+        group.duration = kAnimationDuration;
+        group.removedOnCompletion = NO;
+        group.repeatCount = MAXFLOAT;
+        group.fillMode = kCAFillModeForwards;
+        [group setAnimations:@[scaleAnimation,scaleAnimation1]];
+        
+        [contentLayer addAnimation:group forKey:@"animationOpacity"];
+        
     }
 }
 

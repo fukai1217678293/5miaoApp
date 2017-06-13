@@ -41,8 +41,16 @@
         manager.errorMessage = @"评论内容不能为空";
         return NO;
     }
-    else if (content.length < 5 || content.length > 1000) {
-        manager.errorMessage = @"评论内容在5~1000字之间";
+    else if (content.length < 1) {
+        manager.errorMessage = @"评论内容不能为空";
+        return NO;
+    }
+    else if ([content stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]].length < 1) {
+        manager.errorMessage = @"评论内容不能为空";
+        return NO;
+    }
+    else if (content.length > 1000) {
+        manager.errorMessage = @"评论内容在1000字以内";
         return NO;
     }
     return YES;

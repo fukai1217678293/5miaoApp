@@ -20,7 +20,7 @@
     [super viewDidLoad];
     self.showNormalBackButtonItem = YES;
     [self.view addSubview:self.wkWebView];
-    NSURL * url = [NSURL URLWithString:@"https://www.anyknew.com/eula"];
+    NSURL * url = [NSURL URLWithString:@"https://5miaoapp.com/eula"];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     [self.wkWebView loadRequest:request];
 }

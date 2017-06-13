@@ -225,14 +225,14 @@
 }*/
 #pragma mark -- UITableViewDataSource
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return _dataSource.count;
+    return self.dataSource.count;
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     NSString *identifier = self.dataSource[indexPath.row][1];
     NSString *placeholder = self.dataSource[indexPath.row][2];
-    id keywords = _dataSource[indexPath.row][3];
-    id minLimits = _dataSource[indexPath.row][4];
-    id maxLimits = _dataSource[indexPath.row][5];
+    id keywords = self.dataSource[indexPath.row][3];
+    id minLimits = self.dataSource[indexPath.row][4];
+    id maxLimits = self.dataSource[indexPath.row][5];
     WEAKSELF;
     PublishFeedTableViewCell *cell = [PublishFeedTableViewCell loadCellWithTableView:tableView reuseIdentifier:identifier];
     [cell configPlaceholder:placeholder minLimitLength:minLimits maxLimitLength:maxLimits];
@@ -257,27 +257,24 @@
             [sender setImage:image forState:UIControlStateNormal];
         };
     }];
-    [cell setTextInputDidEndEditingHandle:^(UITextView *inputView){
-        self.isFladed =inputView.text.length;
-    }];
-    //圈子解释弹框
-    [cell setDidClickedDesCircleAction:^(UIButton *sender){
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [[QZDesAlertView manager] showInView:weakSelf.navigationController.view];
-        });
-    }];
-    //选择时间
-    [cell setDidClickedHourSelectAction:^(BOOL isSelectLeft){
-        NSString *hour = isSelectLeft ? @"8" : @"24";
-        [weakSelf.feedModel setValue:hour forKeyPath:keywords];
-    }];
+//    //圈子解释弹框
+//    [cell setDidClickedDesCircleAction:^(UIButton *sender){
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            [[QZDesAlertView manager] showInView:weakSelf.navigationController.view];
+//        });
+//    }];
+//    //选择时间
+//    [cell setDidClickedHourSelectAction:^(BOOL isSelectLeft){
+//        NSString *hour = isSelectLeft ? @"8" : @"24";
+//        [weakSelf.feedModel setValue:hour forKeyPath:keywords];
+//    }];
     [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
     return cell;
 }
 
 #pragma mark -- UITableViewDelegate
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return [_dataSource[indexPath.row][0] floatValue];
+    return [self.dataSource[indexPath.row][0] floatValue];
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return section ? 40 : 0;
@@ -288,28 +285,34 @@
     }
     return nil;
 }
-#pragma mark -- setter
-- (void)setIsFladed:(BOOL)isFladed {
-    _isFladed = isFladed;
-    if (isFladed) {
-        //rowHeight id placeholder  keywords minInputLimitLength maxInputLimitLength
-        _dataSource =[@[
-  @[@"50",PublishFeedTableViewCellTypeTitle,@"添加标题(5-50)",@"title",@5,@50],
-  @[@"200",PublishFeedTableViewCellTypeDescInput,@"还有什么想说的?(选填,5000字以内)",@[@"dec",@"image"],@0,@5000]] copy];
-    } else {
+//#pragma mark -- setter
+//- (void)setIsFladed:(BOOL)isFladed {
+//    _isFladed = isFladed;
+//    if (isFladed) {
+//        //rowHeight id placeholder  keywords minInputLimitLength maxInputLimitLength
+//        _dataSource =[@[
+//  @[@"50",PublishFeedTableViewCellTypeTitle,@"添加标题(50字以内)",@"title",@1,@MAXFLOAT],
+//  @[@"200",PublishFeedTableViewCellTypeDescInput,@"还有什么想说的?(选填,5000字以内)",@[@"dec",@"image"],@0,@5000]] copy];
+//    } else {
+//        
+//    }
+//    if (_tableView) {
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            [self.tableView reloadData];
+//        });
+//    }
+//}
+#pragma mark -- getter
+- (NSArray <NSArray *>*)dataSource {
+    if (!_dataSource) {
         //rowHeight id placeholder  keywords
         _dataSource = [
-  @[
-      @[@"50",PublishFeedTableViewCellTypeTitle,@"添加标题(5-50)",@"title",@5,@50],
-      @[@"200",PublishFeedTableViewCellTypeDescInput,@"还有什么想说的?(选填,5000字以内)",@[@"dec",@"image"],@0,@5000]] copy];
+                       @[
+                         @[@"50",PublishFeedTableViewCellTypeTitle,@"添加标题(50以内)",@"title",@1,@MAXFLOAT],
+                         @[@"200",PublishFeedTableViewCellTypeDescInput,@"还有什么想说的?(选填,5000字以内)",@[@"dec",@"image"],@0,@5000]] copy];
     }
-    if (_tableView) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.tableView reloadData];
-        });
-    }
+    return _dataSource;
 }
-#pragma mark -- getter
 - (PublishFeedModel *)feedModel {
     if (!_feedModel) {
         _feedModel = [[PublishFeedModel alloc] init];

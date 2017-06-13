@@ -13,11 +13,10 @@
 #import "MoreCommentVC.h"
 #import "CommentModel.h"
 #import "FeedDetailReformer.h"
-#import "FeedDetailTableViewCell.h"
 #import "VoteSliderView.h"
 #import "UpForCommentApiManager.h"
 #import "OtherUserCenterVC.h"
-@interface HotestCommentVC ()<UITableViewDataSource,UITableViewDelegate,VTAPIManagerParamSource,VTAPIManagerCallBackDelegate,FeedDetailTableViewCellDelegate>
+@interface HotestCommentVC ()<UITableViewDataSource,UITableViewDelegate,VTAPIManagerParamSource,VTAPIManagerCallBackDelegate>
 
 @property (nonatomic,strong)UITableView             *commentTableView;
 @property (nonatomic,assign)NSUInteger              page;
@@ -32,6 +31,7 @@
 
 @implementation HotestCommentVC
 
+/*
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = UIRGBColor(241, 241, 241, 1.0f);
@@ -333,7 +333,7 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
+*/
 /*
 #pragma mark - Navigation
 

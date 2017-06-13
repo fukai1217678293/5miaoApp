@@ -17,22 +17,27 @@
 #import <SDImageCache.h>
 #import "FeedModel.h"
 #import <SDWebImageDownloader.h>
+#import "LaunchPageManager.h"
 
 @interface QZFindVC ()<VTAPIManagerParamSource,VTAPIManagerCallBackDelegate,UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout,QZFindCollectionCellDelegate>
-
 @property (nonatomic,strong)UICollectionView    *dataCollectionView;
 @property (nonatomic,strong)HomeQuanZiApiManager*listApiManager;
 @property (nonatomic,strong)NSMutableArray <FeedModel *>*dataSource;
 @property (nonatomic,strong)NSString            *lastAnchor;
 @property (nonatomic,strong)UIView              *noDataBaseView;
+
 @end
 
 @implementation QZFindVC
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.view.backgroundColor =[UIColor redColor];
+    self.navigationItem.title = @"圈子";
+    self.view.backgroundColor = [UIColor colorWithHexstring:@"f8f8f8"];
     [self.view addSubview:self.dataCollectionView];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userLoginStatusDidChange) name:VTAppContextUserDidLoginInNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userLoginStatusDidChange) name:VTAppContextUserDidLoginOutNotification object:nil];
+    [LaunchPageManager  startHelloPage];
 
 }
 #pragma mark -- Private Method
@@ -94,6 +99,12 @@
     }
     [self.dataCollectionView.mj_footer beginRefreshing];
     [self.listApiManager loadData];
+}
+- (void)userLoginStatusDidChange {
+    WEAKSELF;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [weakSelf.dataCollectionView.mj_header beginRefreshing];
+    });
 }
 #pragma mark -- VTAPIManagerParamSource
 - (NSDictionary *)paramsForApi:(APIBaseManager *)manager {
@@ -219,7 +230,7 @@
 //        layout.estimatedItemSize = CGSizeMake(SCREEN_WIDTH, defaultHeight);
         layout.headerReferenceSize = CGSizeMake(SCREEN_WIDTH, 7.0f);
         
-        _dataCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT-64-49) collectionViewLayout:layout];
+        _dataCollectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT) collectionViewLayout:layout];
         [_dataCollectionView registerClass:[QZFindCollectionCell class] forCellWithReuseIdentifier:@"cell"];
         _dataCollectionView.delegate = self;
         _dataCollectionView.dataSource= self;
@@ -232,7 +243,6 @@
     }
     return _dataCollectionView;
 }
-
 - (HomeQuanZiApiManager *)listApiManager {
     if (!_listApiManager) {
         _listApiManager = [[HomeQuanZiApiManager alloc] init];
@@ -249,8 +259,8 @@
         UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, SCREEN_WIDTH-20, _noDataBaseView.height)];
         titleLabel.numberOfLines = 0;
         titleLabel.textAlignment = NSTextAlignmentLeft;
-        titleLabel.textColor = [UIColor colorWithHexstring:@"666666"];
-        titleLabel.text = @"圈子是一个私密交流场所，在这里没人知道你的真实身份。圈外人看不到你们说了什么，而圈内人可以毫无顾忌地说出真实想法，发表圈内八卦和小道消息。\n\n你还没有加入任何圈子，你可以等待邀请，也可以点击下方红色“+“创建自己的圈子。";
+        titleLabel.textColor = [UIColor colorWithHexstring:@"333333"];
+        titleLabel.text = @"圈子是一个私密交流场所，在这没人知道你的真实身份。加入圈子是神秘的，需要圈内人邀请。圈子内的信息24小时自动删除，拒绝挖坟。\n\n点击下方红色”+“创建圈子。";
         titleLabel.font = [UIFont systemFontOfSize:17];
         titleLabel.backgroundColor = [UIColor clearColor];
         [_noDataBaseView addSubview:titleLabel];

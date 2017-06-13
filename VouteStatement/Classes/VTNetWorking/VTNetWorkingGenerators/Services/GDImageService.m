@@ -12,7 +12,7 @@
 
 - (NSString *)serviceBaseUrl {
     
-    return @"https://up.anyknew.com";
+    return @"https://up.5miaoapp.com";
 }
 
 @end

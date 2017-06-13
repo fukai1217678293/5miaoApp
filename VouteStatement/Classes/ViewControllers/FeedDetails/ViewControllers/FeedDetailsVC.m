@@ -7,7 +7,6 @@
 //
 
 #import "FeedDetailsVC.h"
-#import "FeedDetailTableViewCell.h"
 #import "FeedDetailApiManager.h"
 #import "FeedDetailReformer.h"
 #import "FeedDetailModel.h"
@@ -25,7 +24,7 @@
 #import <UShareUI/UShareUI.h>
 #import "JuBaoAlertView.h"
 #import "RegistViewController.h"
-@interface FeedDetailsVC ()<UITableViewDelegate,UITableViewDataSource,VTAPIManagerCallBackDelegate,VTAPIManagerParamSource,VottingViewDelegate,FeedDetailTableViewCellDelegate> {
+@interface FeedDetailsVC ()<UITableViewDelegate,UITableViewDataSource,VTAPIManagerCallBackDelegate,VTAPIManagerParamSource,VottingViewDelegate> {
     BOOL        _showMoreContent;
 }
 
@@ -49,6 +48,7 @@
 
 @implementation FeedDetailsVC
 
+/*
 - (void)viewDidLoad {
     
     [super viewDidLoad];
@@ -589,6 +589,7 @@
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
+ */
 
 
 @end

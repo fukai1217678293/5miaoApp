@@ -9,6 +9,10 @@
 #import "VTAppContext.h"
 #import <AFNetworking.h>
 #import "UIDevice+Platform.h"
+#import "NotificationManager.h"
+
+NSNotificationName const VTAppContextUserDidLoginInNotification = @"VTAppContextUserDidLoginInNotification";
+NSNotificationName const VTAppContextUserDidLoginOutNotification = @"VTAppContextUserDidLoginOutNotification";
 
 @implementation VTAppContext
 
@@ -23,6 +27,8 @@
 @synthesize getAgreeCount   = _getAgreeCount;
 @synthesize hash_name       = _hash_name;
 @synthesize showFindDescAlert = _showFindDescAlert;
+@synthesize showHelloPage   = _showHelloPage;
+
 static VTAppContext * obj = nil;
 
 + (instancetype)shareInstance {
@@ -58,15 +64,15 @@ static VTAppContext * obj = nil;
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"signature"];
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"hash_name"];
     [[NSUserDefaults standardUserDefaults] synchronize];
-
+    [[NSNotificationCenter defaultCenter] postNotificationName:VTAppContextUserDidLoginOutNotification object:self];
 }
 
 #pragma mark -- setter
 - (void)setToken:(NSString *)token {
-    
     [[NSUserDefaults standardUserDefaults] setValue:token forKey:@"token"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     _token = [token copy];
+    [[NSNotificationCenter defaultCenter] postNotificationName:VTAppContextUserDidLoginInNotification object:self];
 }
 - (void)setToken_type:(NSString *)token_type {
     [[NSUserDefaults standardUserDefaults] setValue:token_type forKey:@"token_tpye"];
@@ -110,7 +116,6 @@ static VTAppContext * obj = nil;
     _impactCount = [impactCount copy];
 }
 - (void)setGetAgreeCount:(NSString *)getAgreeCount {
-    
     [[NSUserDefaults standardUserDefaults] setValue:getAgreeCount forKey:@"getAgreeCount"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     _getAgreeCount = [getAgreeCount copy];
@@ -119,6 +124,11 @@ static VTAppContext * obj = nil;
     [[NSUserDefaults standardUserDefaults] setValue:[NSString stringWithFormat:@"%d",showFindDescAlert] forKey:@"showFindDescAlert"];
     [[NSUserDefaults standardUserDefaults] synchronize];
     _showFindDescAlert = showFindDescAlert;
+}
+- (void)setShowHelloPage:(BOOL)showHelloPage {
+    [[NSUserDefaults standardUserDefaults] setValue:[NSString stringWithFormat:@"%d",showHelloPage] forKey:@"showHelloPage"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    _showHelloPage = showHelloPage;
 }
 #pragma mark -- getter
 - (NSString *)token {
@@ -261,6 +271,16 @@ static VTAppContext * obj = nil;
         return YES;
     }
     if ([showFindDescAlert intValue]) {
+        return NO;
+    }
+    return YES;
+}
+- (BOOL)showHelloPage {
+    NSString *showHelloPage = [[NSUserDefaults standardUserDefaults] valueForKey:@"showHelloPage"];
+    if ([NSString isBlankString:showHelloPage]) {
+        return YES;
+    }
+    if ([showHelloPage intValue]) {
         return NO;
     }
     return YES;

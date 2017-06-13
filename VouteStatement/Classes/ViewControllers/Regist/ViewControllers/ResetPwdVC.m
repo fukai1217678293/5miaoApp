@@ -82,7 +82,7 @@ static NSTimeInterval const reGetVerifyCodeCountdownTimeInterval = 1.0f;
     if (self.messageApiManager == manager) {
         
         NSDictionary * param =  @{@"phone":self.phoneNumber,
-                                  @"stype":@"reg"};
+                                  @"stype":@"valid"};
         return param;
     }
     else {

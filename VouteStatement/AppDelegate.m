@@ -15,6 +15,7 @@
 #import "ViewController.h"
 #import <BaiduMapAPI_Base/BMKMapManager.h>
 #import "FeedDetailViewController.h"
+#import "JPUSHService.h"
 // iOS10注册APNs所需头 件
 #ifdef NSFoundationVersionNumber_iOS_9_x_Max
 #import <UserNotifications/UserNotifications.h>

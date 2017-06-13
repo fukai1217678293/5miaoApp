@@ -89,7 +89,7 @@
     if (!_inputView) {
         _inputView = [[VTTextView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
         _inputView.backgroundColor = [UIColor whiteColor];
-        _inputView.placeholder = @"请输入评论内容(5-1000字)";
+        _inputView.placeholder = @"请输入评论内容(1000字以内)";
         _inputView.limitLength = 1000;
         _inputView.hiddenTipLimitProgress = YES;
     }

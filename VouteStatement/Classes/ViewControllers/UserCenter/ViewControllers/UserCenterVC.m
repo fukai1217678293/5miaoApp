@@ -17,7 +17,7 @@
 #import "MyCircleFeedListVC.h"
 #import "NotificationListVC.h"
 #import "NotificationManager.h"
-
+#import "VTWebViewController.h"
 NSString * const UserCenterViewControllerWillUpdateNotification = @"UserCenterViewControllerWillUpdateNotification";
 
 @interface UserCenterVC ()<UITableViewDelegate,UITableViewDataSource,VTAPIManagerParamSource,VTAPIManagerCallBackDelegate>
@@ -86,6 +86,11 @@ NSString * const UserCenterViewControllerWillUpdateNotification = @"UserCenterVi
     notiVC.hidesBottomBarWhenPushed = YES;
     [self.navigationController pushViewController:notiVC animated:YES];
 }
+- (void)pushToContactOurs {
+    VTWebViewController *webVC = [[VTWebViewController alloc] initWithNavTitle:@"联系我们" urlString:@"https://5miaoapp.com/contact"];
+    webVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:webVC animated:YES];
+}
 #pragma mark -- Notification
 - (void)updateUserInformation {
     [self.userinfoApiManager loadData];
@@ -143,7 +148,7 @@ NSString * const UserCenterViewControllerWillUpdateNotification = @"UserCenterVi
         [cell addSubview:titleButton];
     }
     UIImageView *redPointImg = (UIImageView *)[cell viewWithTag:2000];
-    if (indexPath.section >1) {
+    if (indexPath.section == 2 || indexPath.section == 3) {
         if (!redPointImg) {
             redPointImg = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"icon_dian.png"]];
             redPointImg.tag = 2000;
@@ -261,7 +266,8 @@ NSString * const UserCenterViewControllerWillUpdateNotification = @"UserCenterVi
     return @[@[@"我的创建",@"icon_mycj.png",@"pushToMyCreateVC"],
              @[@"我的参与",@"icon_mycy.png",@"pushToMyJoinedVC"],
              @[@"我的圈子",@"icon_quanquan.png",@"pushToMyCircleVC"],
-             @[@"我的通知",@"icon_tongzhi.png",@"pushToNotiesVC"]];
+             @[@"我的通知",@"icon_tongzhi.png",@"pushToNotiesVC"],
+             @[@"联系我们",@"icon_contact.png",@"pushToContactOurs"]];
 }
 - (NSDictionary *)redPointNotificationObj {
     if (!_redPointNotificationObj) {
