@@ -78,6 +78,12 @@ fi
 # 判断编译的项目类型是workspace还是project
 if $is_workspace ; then
 # 编译前清理工程
+if [ -e "${project_name}.xcworkspace" ] ; then
+echo "\033[32;1m项目路径正确 🚀 🚀 🚀  \033[0m"
+fi
+
+xcodebuild -workspace "${project_name}.xcworkspace" -scheme "${scheme_name}" -configuration "${build_configuration}" clean
+
 xcodebuild clean -workspace ${project_name}.xcworkspace \
                  -scheme ${scheme_name} \
                  -configuration ${build_configuration}
